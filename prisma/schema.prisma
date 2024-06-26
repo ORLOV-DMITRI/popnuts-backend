@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String
+  password   String
+  WorkSpaces WorkSpace[]
+}
+
+model WorkSpace {
+  id        String   @id @default(uuid())
+  name      String
+  Boards    Board[]
+  createdAd DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+}
+
+model Board {
+  id          String     @id @default(uuid())
+  name        String
+  Cards       Card[]
+  createdAd   DateTime   @default(now())
+  WorkSpace   WorkSpace? @relation(fields: [workSpaceId], references: [id])
+  workSpaceId String?
+}
+
+model Card {
+  id      String  @id @default(uuid())
+  name    String
+  Todo    Todo[]
+  Board   Board?  @relation(fields: [boardId], references: [id])
+  boardId String?
+}
+
+model Todo {
+  id          String  @id @default(uuid())
+  name        String
+  description String
+  Card        Card?   @relation(fields: [cardId], references: [id])
+  cardId      String?
+}
