@@ -8,13 +8,15 @@ const {prisma} = require("../prisma/prisma-client");
 const all = async (req, res) => {
     try {
         const {workSpaceId} = req.params;
-        console.log(workSpaceId)
         if (!workSpaceId) {
             return res.status(400).json({message: "Не найдено рабочее пространство"});
         }
         const boards = await prisma.board.findMany({
             where: {
                 workSpaceId
+            },
+            include: {
+                Cards: true
             },
             orderBy: {
                 createdAd: 'desc'

@@ -14,6 +14,9 @@ const all = async (req, res) => {
             where: {
                 userId: req.user.id,
             },
+            include: {
+                Boards: true,
+            },
             orderBy: {
                 createdAd: 'desc'
             }

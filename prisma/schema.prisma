@@ -43,7 +43,7 @@ model Card {
 model Todo {
   id          String  @id @default(uuid())
   name        String
-  description String
+  description String?
   Card        Card?   @relation(fields: [cardId], references: [id])
   cardId      String?
 }

@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
@@ -23,6 +22,8 @@ app.use(cors({
 app.use("/api/user", require("./routes/users"));
 app.use("/api/space", require("./routes/space"))
 app.use("/api/board", require("./routes/board"))
+app.use("/api/card", require("./routes/card"))
+app.use("/api/todo", require("./routes/todo"))
 
 
 
