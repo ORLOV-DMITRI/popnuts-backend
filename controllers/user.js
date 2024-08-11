@@ -2,93 +2,53 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const {prisma} = require('../prisma/prisma-client')
 
-
-/**
- * @route GET-/api/user/login
- * @desc Регестраци
- * @access Public
- */
-const login = async (req, res) => {
+const loginOrRegister = async (req, res) => {
     try {
-        const {email, password} = req.body;
-
+        const { email, password } = req.body;
+        
         if (!email || !password) {
-            return res.status(400).json({message: "Заполните поля"});
+            return res.status(400).json({ message: "Заполните все поля" });
         }
-
-        const user = await prisma.user.findFirst({
-            where: {
-                email
-            }
-        });
-
-        const isPasswordCorrect = user && (await bcrypt.compare(password, user.password));
-        const secret = process.env.JWT_SECRET;
-
-        if (user && isPasswordCorrect && secret) {
-            res.status(200).json({
-                id: user.id,
-                email: user.email,
-                token: jwt.sign({id: user.id}, secret, {expiresIn: "30d"})
+        
+        let user = await prisma.user.findFirst({ where: { email } });
+        
+        if (!user) {
+            const salt = await bcrypt.genSalt(10);
+            const hash = await bcrypt.hash(password, salt);
+            
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    password: hash
+                }
             });
         } else {
-            return res.status(400).json({message: "Ошилбка Логина или Парооооля"});
-        }
-    } catch (error) {
-        return res.status(400).json({message: "Что то пошло не так"});
-    }
-};
-
-const register = async (req, res) => {
-    try {
-        const {email, password} = req.body;
-
-        if (!email) {
-            return res.status(400).json({message: "Email обязательно"});
-        }
-        if (!password) {
-            return res.status(400).json({message: "Пароль обязательно"});
-        }
-
-        const registeredUser = await prisma.user.findFirst({
-            where: {
-                email
+            const isPasswordCorrect = await bcrypt.compare(password, user.password);
+            
+            if (!isPasswordCorrect) {
+                return res.status(400).json({ message: "There is a user, but the password is incorrect" });
             }
-        });
-        if (registeredUser) {
-            return res.status(400).json({message: "Пользователь с таким email уже существует"});
         }
-
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
-
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: hash
-            }
-        });
+        
+        // Создание JWT токена
         const secret = process.env.JWT_SECRET;
-
-        if (user && secret) {
-            res.status(201).json({
-                id: user.id,
-                email: user.email,
-                token: jwt.sign({id: user.id}, secret, {expiresIn: "30d"})
-            });
-        } else {
-            return res.status(400).json({message: "Ошибка создания"});
+        
+        if (!secret) {
+            return res.status(500).json({ message: "Секретный ключ не установлен" });
         }
+        
+        const token = jwt.sign({ id: user.id }, secret, { expiresIn: "30d" });
+        
+        res.status(user ? 200 : 201).json({
+            id: user.id,
+            email: user.email,
+            token
+        });
     } catch (error) {
-        return res.status(400).json({message: "ОШИБКА" + error});
+        console.error(error);
+        res.status(500).json({ message: "Что-то пошло не так" });
     }
 };
-/**
- *
- * @route GET /api/user/current
- * @desc Текущий пользователь
- * @access Private
- */
 
 const current = async (req, res) => {
     res.status(200).json(req.user);
@@ -96,7 +56,6 @@ const current = async (req, res) => {
 
 
 module.exports = {
-    login,
-    register,
+    loginOrRegister,
     current
 };

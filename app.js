@@ -15,24 +15,16 @@ app.use(cors({
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true 
+    credentials: true
 }));
 
 
 app.use("/api/user", require("./routes/users"));
-app.use("/api/space", require("./routes/space"))
-app.use("/api/board", require("./routes/board"))
-app.use("/api/card", require("./routes/card"))
-app.use("/api/todo", require("./routes/todo"))
+app.use("/api/favorites", require("./routes/favorites"));
+app.use("/api/basket", require("./routes/basket"));
+app.use("/api/wallet", require("./routes/wallet"));
+app.use("/api/order", require("./routes/order"));
 
-
-
-// app.use("/api/cost", require("./routes/cost"));
-// app.use("/api/income", require("./routes/income"));
-// app.use("/api/deposit", require("./routes/deposit"));
-// app.use("/api/transaction", require("./routes/transaction"));
-// app.use("/api/total", require("./routes/total"));
-// app.use("/api/quote", require("./routes/quote"));
 
 
 module.exports = app;

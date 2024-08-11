@@ -7,43 +7,78 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
-  id         String      @id @default(uuid())
-  email      String
-  password   String
-  WorkSpaces WorkSpace[]
+  id                Int              @id @default(autoincrement())
+  email             String           @unique
+  password          String
+  favorites         FavoriteProduct[]
+  cart              CartProduct[]
+  orders            Order[]
+  walletUSD         Float            @default(0.0)  // Баланс в долларах
+  walletCoin        Int              @default(0)    // Баланс в монетах (Coin)
+  preferredCurrency String           @default("USD") // Выбранная по умолчанию валюта: "USD" или "Coin"
 }
 
-model WorkSpace {
-  id        String   @id @default(uuid())
-  name      String
-  Boards    Board[]
-  createdAd DateTime @default(now())
-  User      User?    @relation(fields: [userId], references: [id])
-  userId    String?
+model FavoriteProduct {
+  id                Int      @id @default(autoincrement())
+  productId         Int      // ID товара из внешнего API
+  title             String
+  category          String
+  price             Float
+  discountPercentage Float
+  rating            Float
+  brand             String?
+  stock             Int
+  thumbnail         String
+  userId            Int
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@unique([productId, userId]) // Уникальность избранного товара для каждого пользователя
 }
 
-model Board {
-  id          String     @id @default(uuid())
-  name        String
-  Cards       Card[]
-  createdAd   DateTime   @default(now())
-  WorkSpace   WorkSpace? @relation(fields: [workSpaceId], references: [id])
-  workSpaceId String?
+model CartProduct {
+  id                Int      @id @default(autoincrement())
+  productId         Int      // ID товара из внешнего API
+  title             String
+  category          String
+  price             Float
+  discountPercentage Float
+  rating            Float
+  brand             String?
+  stock             Int
+  thumbnail         String
+  userId            Int
+  user              User     @relation(fields: [userId], references: [id])
+  count             Int      @default(1) // Количество товара в корзине
+
+
+  @@unique([productId, userId]) // Уникальность товара в корзине для каждого пользователя
+}
+model Order {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  totalPrice Float
+  currency  String
+  createdAt DateTime     @default(now())
+  items     OrderItem[]
+
+  // Важный аспект: индексация заказов
+  @@index([userId, createdAt])
 }
 
-model Card {
-  id      String  @id @default(uuid())
-  name    String
-  Todo    Todo[]
-  Board   Board?  @relation(fields: [boardId], references: [id])
-  boardId String?
-}
-
-model Todo {
-  id          String  @id @default(uuid())
-  name        String
-  description String?
-  Card        Card?   @relation(fields: [cardId], references: [id])
-  cardId      String?
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  category  String
+  productId Int
+  title     String
+  price     Float
+  discountPercentage Float
+  rating    Float
+  brand     String?
+  quantity  Int
+  thumbnail String
 }
